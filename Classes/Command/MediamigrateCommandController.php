@@ -53,6 +53,12 @@ class MediamigrateCommandController extends \TYPO3\CMS\Extbase\Mvc\Controller\Co
     protected $categoryRepository;
 
     /**
+     * @var \GeorgRinger\News\Domain\Repository\MediaRepository
+     * @inject
+     */
+    protected $mediaRepository;
+
+    /**
      * @var \TYPO3\CMS\Extbase\SignalSlot\Dispatcher
      * @inject
      */
@@ -101,9 +107,13 @@ class MediamigrateCommandController extends \TYPO3\CMS\Extbase\Mvc\Controller\Co
 
                     // Media -> FAL Media
                     /* @var $news \GeorgRinger\News\Domain\Model\News */
-                    if ($news->getMedia() && $news->getMedia()->count() > 0) {
+                    $mediaQuery = $this->mediaRepository->createQuery();
+                    $mediaQuery->matching($mediaQuery->equals('parent', $news->getUid()));
+                    $mediaQuery->getQuerySettings()->setRespectStoragePage(false);
+                    $medias = $mediaQuery->execute();
+                    if ($medias->count() > 0) {
                         $news->setFalMedia($clear);
-                        foreach ($news->getMedia()->toArray() as $media) {
+                        foreach ($medias as $media) {
                             /* @var $media \GeorgRinger\News\Domain\Model\Media */
                             // Is it an image
                             if (strlen($media->getImage()) > 0) {
